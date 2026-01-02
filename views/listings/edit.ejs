@@ -1,0 +1,121 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="row">
+  <div class="col-8 offset-2">
+
+    <h3>Edit Listing</h3>
+
+    <form 
+      method="POST" 
+      action="/listings/<%= listing._id %>?_method=PUT"
+      enctype="multipart/form-data"
+    >
+
+      <!-- TITLE -->
+      <div class="mb-3">
+        <label class="form-label">Title</label>
+        <input 
+          name="listing[title]" 
+          type="text" 
+          class="form-control"
+          value="<%= listing.title %>"
+          required
+        />
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea 
+          name="listing[description]" 
+          class="form-control"
+          required
+        ><%= listing.description %></textarea>
+      </div>
+
+      <!-- PREVIOUS IMAGE -->
+      <% if (listing.image && listing.image.url) { %>
+        <div class="mb-3">
+          <p class="text-muted">Original Listing Image</p>
+          <img src="<%= originalImageurl %>" 
+            class="img-fluid rounded mb-2"
+            style="max-height: 200px;"
+          />
+        </div>
+      <% } %>
+
+      <!-- NEW IMAGE PREVIEW -->
+      <div class="mb-3">
+        <p class="text-muted">New Image Upload</p>
+        <img 
+          id="imagePreview"
+          class="img-fluid rounded d-none"
+          style="max-height: 200px;"
+        />
+      </div>
+
+      <!-- UPLOAD NEW IMAGE -->
+      <div class="mb-3">
+        <label class="form-label">Upload New Image</label>
+        <input 
+          name="listing[image]" 
+          type="file" 
+          class="form-control"
+          onchange="previewImage(event)"
+        />
+      </div>
+
+      <!-- PRICE -->
+      <div class="mb-3">
+        <label class="form-label">Price</label>
+        <input 
+          name="listing[price]" 
+          type="number" 
+          class="form-control"
+          value="<%= listing.price %>"
+          required
+        />
+      </div>
+
+      <!-- COUNTRY -->
+      <div class="mb-3">
+        <label class="form-label">Country</label>
+        <input 
+          name="listing[country]" 
+          type="text" 
+          class="form-control"
+          value="<%= listing.country %>"
+          required
+        />
+      </div>
+
+      <!-- LOCATION -->
+      <div class="mb-3">
+        <label class="form-label">Location</label>
+        <input 
+          name="listing[location]" 
+          type="text" 
+          class="form-control"
+          value="<%= listing.location %>"
+          required
+        />
+      </div>
+
+      <button class="btn btn-dark">Update Listing</button>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+  function previewImage(event) {
+    const preview = document.getElementById("imagePreview");
+    const file = event.target.files[0];
+
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.classList.remove("d-none");
+    }
+  }
+</script>

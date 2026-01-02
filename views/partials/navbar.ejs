@@ -1,0 +1,24 @@
+<nav>
+  <a href="/listings">Home</a>
+
+  <% if (!currentUser) { %>
+    <a href="/signup">Sign Up</a>
+    <a href="/login">Login</a>
+  <% } else { %>
+    <span>Hi, <%= currentUser.username %></span>
+    <a href="/logout">Logout</a>
+  <% } %>
+
+
+  <% if (success.length > 0) { %>
+    <div class="alert alert-success">
+        <%= success %>
+    </div>
+<% } %>
+
+<% if (error.length > 0) { %>
+    <div class="alert alert-danger">
+        <%= error %>
+    </div>
+<% } %>
+</nav>

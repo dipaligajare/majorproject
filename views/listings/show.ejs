@@ -1,0 +1,162 @@
+<%- layout("/layouts/boilerplate") -%>
+
+<div class="row">
+  <div class="col-8 offset-2">
+
+    <!-- ================= LISTING TITLE ================= -->
+    <h3 class="mb-3"><%= listing.title %></h3>
+
+    <!-- ================= IMAGE ================= -->
+    <% if (listing.image && listing.image.url) { %>
+      <div class="text-center mb-3">
+        <img 
+          src="<%= listing.image.url %>" 
+          alt="Listing Image"
+          class="img-fluid rounded"
+          style="max-width: 300px;"
+        >
+      </div>
+    <% } %>
+
+    <!-- ================= DETAILS ================= -->
+    <ul class="list-group mb-3">
+      <li class="list-group-item">
+        <strong>Owned By:</strong> <%= listing.owner.username %>
+      </li>
+      <li class="list-group-item">
+        <strong>Description:</strong> <%= listing.description %>
+      </li>
+      <li class="list-group-item">
+        <strong>Price:</strong> ₹<%= listing.price.toLocaleString("en-IN") %>
+      </li>
+      <li class="list-group-item">
+        <strong>Location:</strong> <%= listing.location %>
+      </li>
+      <li class="list-group-item">
+        <strong>Country:</strong> <%= listing.country %>
+      </li>
+    </ul>
+
+    <!-- ================= EDIT / DELETE ================= -->
+    <% if (currentUser && listing.owner._id.equals(currentUser._id)) { %>
+      <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark mb-3">
+        Edit Listing
+      </a>
+
+      <form 
+        action="/listings/<%= listing._id %>?_method=DELETE" 
+        method="POST" 
+        class="d-inline"
+      >
+        <button class="btn btn-danger">Delete Listing</button>
+      </form>
+    <% } %>
+
+    <hr>
+
+    <!-- ================= ADD REVIEW ================= -->
+    <div class="row justify-content-center">
+      <div class="col-8">
+
+        <% if (currentUser) { %>
+          <h4>Leave a Review</h4>
+
+          <form action="/listings/<%= listing._id %>/reviews" method="POST">
+
+            <!-- STAR RATING -->
+            <fieldset class="starability-slot mb-3">
+              <legend>Rating</legend>
+
+              <% for (let i = 1; i <= 5; i++) { %>
+                <input 
+                  type="radio" 
+                  id="rate<%= i %>" 
+                  name="review[rating]" 
+                  value="<%= i %>" 
+                  required
+                >
+                <label for="rate<%= i %>"><%= i %> star</label>
+              <% } %>
+            </fieldset>
+
+            <!-- COMMENT -->
+            <div class="mb-3">
+              <label class="form-label">Comment</label>
+              <textarea 
+                name="review[comment]" 
+                class="form-control" 
+                rows="3" 
+                required
+              ></textarea>
+            </div>
+
+            <button class="btn btn-outline-dark">
+              Submit Review
+            </button>
+          </form>
+
+        <% } else { %>
+          <p class="text-muted">
+            Please <a href="/login">login</a> to add a review.
+          </p>
+        <% } %>
+
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- ================= SHOW REVIEWS ================= -->
+    <div class="row justify-content-center">
+      <div class="col-8">
+
+        <h4>All Reviews</h4>
+
+        <% if (listing.reviews.length === 0) { %>
+          <p>No reviews yet.</p>
+        <% } else { %>
+
+          <ul class="list-group">
+            <% listing.reviews.forEach(review => { %>
+
+              <li class="list-group-item">
+
+                <strong>
+                  <%= review.author ? review.author.username : "Anonymous" %>
+                </strong>
+
+                <p class="starability-result" 
+                   data-rating="<%= review.rating %>">
+                </p>
+
+                <p><%= review.comment %></p>
+
+                <% if (
+                  currentUser && 
+                  review.author && 
+                  review.author._id.equals(currentUser._id)
+                ) { %>
+
+                  <form 
+                    action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" 
+                    method="POST"
+                  >
+                    <button class="btn btn-sm btn-danger">
+                      Delete
+                    </button>
+                  </form>
+
+                <% } %>
+
+              </li>
+
+            <% }) %>
+          </ul>
+
+        <% } %>
+
+      </div>
+    </div>
+
+  </div>
+</div>
