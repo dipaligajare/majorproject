@@ -36,9 +36,6 @@ app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 
 // ================= SESSION STORE =================
-
-
-
 const store = MongoStore.create({
   mongoUrl: dbUrl,
   crypto: {
@@ -54,12 +51,12 @@ store.on("error", (err) => {
 // ================= SESSION =================
 const sessionOptions = {
   store,
-  secret: process.env.SESSION_SECRET ,
+  secret: process.env.SESSION_SECRET || "mysupersecret",
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 };
 
@@ -104,10 +101,10 @@ app.use("/", userRoutes);
 app.use("/listings", listingRoutes);
 app.use("/listings/:id/reviews", reviewRoutes);
 
-// ================= 404 HANDLER =================
+// ================= 404 HANDLER (Express 5 SAFE) =================
 app.use((req, res, next) => {
   next(new ExpressError(404, "Page Not Found"));
-});;
+});
 
 // ================= ERROR HANDLER =================
 app.use((err, req, res, next) => {
@@ -116,7 +113,7 @@ app.use((err, req, res, next) => {
 });
 
 // ================= SERVER =================
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
