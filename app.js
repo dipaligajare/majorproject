@@ -1,6 +1,4 @@
-if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config();
-}
+require("dotenv").config();
 
 const express = require("express");
 const app = express();
@@ -23,7 +21,8 @@ const reviewRoutes = require("./routes/review.js");
 const userRoutes = require("./routes/user.js");
 
 // ================= DATABASE =================
-const dbUrl = process.env.ATLASDB_URL;
+const dbUrl =
+  process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/majorproject";
 
 // ================= TEMPLATE ENGINE =================
 app.engine("ejs", ejsMate);
@@ -45,7 +44,7 @@ const store = MongoStore.create({
 });
 
 store.on("error", (err) => {
-  console.log("❌ Error in Mongo session store:", err);
+  console.log("❌ SESSION STORE ERROR", err);
 });
 
 // ================= SESSION =================
@@ -56,7 +55,7 @@ const sessionOptions = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
   },
 };
 
@@ -72,23 +71,20 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 // ================= DATABASE CONNECTION =================
-async function main() {
-  try {
-    await mongoose.connect(dbUrl);
-    console.log("✅ Connected to MongoDB Atlas");
-  } catch (err) {
-    console.log("❌ MongoDB connection error:", err);
-  }
-}
-
-main();
+mongoose
+  .connect(dbUrl)
+  .then(() => {
+    console.log("✅ Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.log("❌ MongoDB connection error", err);
+  });
 
 // ================= GLOBAL LOCALS =================
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
-  res.locals.returnTo = req.session.returnTo || "/listings";
   next();
 });
 
@@ -101,15 +97,15 @@ app.use("/", userRoutes);
 app.use("/listings", listingRoutes);
 app.use("/listings/:id/reviews", reviewRoutes);
 
-// ================= 404 HANDLER (Express 5 SAFE) =================
-app.use((req, res, next) => {
+// ================= 404 HANDLER =================
+app.all("*", (req, res, next) => {
   next(new ExpressError(404, "Page Not Found"));
 });
 
 // ================= ERROR HANDLER =================
 app.use((err, req, res, next) => {
   const { statusCode = 500, message = "Something went wrong" } = err;
-  res.status(statusCode).render("error.ejs", { err: { message, statusCode } });
+  res.status(statusCode).render("error.ejs", { err });
 });
 
 // ================= SERVER =================

@@ -21,16 +21,17 @@ module.exports.new = (req, res) => {
 
 // ---------------- CREATE ----------------
 module.exports.create = async (req, res) => {
-
-  let url=req.file.path;
-  let filenamee=req.file.filenamee;
-
-  console.log(url,"..",filenamee);
   const newListing = new Listing(req.body.listing);
   newListing.owner = req.user._id;
-  newListing.image={url,filenamee};
-  await newListing.save();
 
+  if (req.file) {
+    newListing.image = {
+      url: req.file.path,
+      filename: req.file.filename
+    };
+  }
+
+  await newListing.save();
   req.flash("success", "New Listing Created");
   res.redirect("/listings");
 };
@@ -45,7 +46,7 @@ module.exports.show = async (req, res) => {
     .populate("owner");
 
   if (!listing) {
-    req.flash("error", "Listing you requested does not exist");
+    req.flash("error", "Listing does not exist");
     return res.redirect("/listings");
   }
 
@@ -61,30 +62,33 @@ module.exports.editForm = async (req, res) => {
     return res.redirect("/listings");
   }
 
-  let originalImageurl=listing.image.url;
-originalImageurl.replace("/upload","/upload/,w_250");
-  res.render("listings/edit.ejs", { listing,originalImageurl});
+  let originalImageurl = listing.image?.url;
+  if (originalImageurl) {
+    originalImageurl = originalImageurl.replace(
+      "/upload",
+      "/upload/w_250"
+    );
+  }
+
+  res.render("listings/edit.ejs", { listing, originalImageurl });
 };
 
 // ---------------- UPDATE ----------------
 module.exports.update = async (req, res) => {
   const { id } = req.params;
-  const listingData = req.body.listing;
 
-  // Default image logic
-  if (!listingData.image) listingData.image = {};
-  if (!listingData.image.url || listingData.image.url.trim() === "") {
-    const randomIndex = Math.floor(Math.random() * defaultImages.length);
-    listingData.image.url = defaultImages[randomIndex];
-  }
+  let listing = await Listing.findByIdAndUpdate(
+    id,
+    req.body.listing,
+    { new: true }
+  );
 
-  let listing=await Listing.findByIdAndUpdate(id, listingData);
-  
-  if(typeof req.file !=="undefined") {
-  let url=req.file.path;
-  let filename=req.file.path;
-  listing.image={url,filename};
-  await listing.save();
+  if (req.file) {
+    listing.image = {
+      url: req.file.path,
+      filename: req.file.filename
+    };
+    await listing.save();
   }
 
   req.flash("success", "Listing updated successfully!");
